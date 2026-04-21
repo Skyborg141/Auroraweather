@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A beautiful, real-time weather application with forecasts, animated visuals, and city search.">
+    <title>SkyPulse — Live Weather</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Animated background particles -->
+    <div id="bg-canvas" class="bg-canvas"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header" id="app-header">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="6" fill="url(#sunGrad)"/>
+                    <g class="sun-rays">
+                        <line x1="16" y1="2" x2="16" y2="7" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="16" y1="25" x2="16" y2="30" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="2" y1="16" x2="7" y2="16" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="25" y1="16" x2="30" y2="16" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="5.9" y1="5.9" x2="9.5" y2="9.5" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="22.5" y1="22.5" x2="26.1" y2="26.1" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="5.9" y1="26.1" x2="9.5" y2="22.5" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="22.5" y1="9.5" x2="26.1" y2="5.9" stroke="url(#rayGrad)" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                    <defs>
+                        <linearGradient id="sunGrad" x1="10" y1="10" x2="22" y2="22">
+                            <stop stop-color="#FFD700"/>
+                            <stop offset="1" stop-color="#FF8C00"/>
+                        </linearGradient>
+                        <linearGradient id="rayGrad" x1="0" y1="0" x2="32" y2="32">
+                            <stop stop-color="#FFD700"/>
+                            <stop offset="1" stop-color="#FFA500"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="logo-text">SkyPulse</span>
+            </div>
+            <div class="search-wrapper" id="search-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="search-input" class="search-input" placeholder="Search city..." autocomplete="off" />
+                <div class="search-suggestions" id="search-suggestions"></div>
+            </div>
+            <button class="location-btn" id="location-btn" title="Use my location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Loading State -->
+        <div class="loading-screen" id="loading-screen">
+            <div class="loader">
+                <div class="loader-circle"></div>
+                <div class="loader-circle"></div>
+                <div class="loader-circle"></div>
+            </div>
+            <p class="loading-text">Fetching weather data...</p>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content hidden" id="main-content">
+            <!-- Current Weather Hero -->
+            <section class="hero-card" id="hero-card">
+                <div class="hero-left">
+                    <div class="hero-location">
+                        <svg class="pin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <h1 id="city-name" class="city-name">Loading...</h1>
+                    </div>
+                    <p class="hero-date" id="hero-date"></p>
+                    <div class="hero-temp-wrap">
+                        <span class="hero-temp" id="hero-temp">--</span>
+                        <span class="hero-unit">°C</span>
+                    </div>
+                    <p class="hero-desc" id="hero-desc">--</p>
+                    <div class="hero-minmax">
+                        <span class="hero-high" id="hero-high">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                            --°
+                        </span>
+                        <span class="hero-low" id="hero-low">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                            --°
+                        </span>
+                    </div>
+                </div>
+                <div class="hero-right">
+                    <div class="weather-animation" id="weather-animation"></div>
+                </div>
+            </section>
+
+            <!-- Detail Cards Row -->
+            <section class="detail-grid" id="detail-grid">
+                <div class="detail-card" id="card-feels-like">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/>
+                        </svg>
+                    </div>
+                    <span class="detail-label">Feels Like</span>
+                    <span class="detail-value" id="feels-like">--°</span>
+                </div>
+                <div class="detail-card" id="card-humidity">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>
+                        </svg>
+                    </div>
+                    <span class="detail-label">Humidity</span>
+                    <span class="detail-value" id="humidity">--%</span>
+                </div>
+                <div class="detail-card" id="card-wind">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/>
+                        </svg>
+                    </div>
+                    <span class="detail-label">Wind</span>
+                    <span class="detail-value" id="wind">-- km/h</span>
+                </div>
+                <div class="detail-card" id="card-pressure">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <span class="detail-label">Pressure</span>
+                    <span class="detail-value" id="pressure">-- hPa</span>
+                </div>
+                <div class="detail-card" id="card-visibility">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <span class="detail-label">Visibility</span>
+                    <span class="detail-value" id="visibility">-- km</span>
+                </div>
+                <div class="detail-card" id="card-uv">
+                    <div class="detail-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                    </div>
+                    <span class="detail-label">UV Index</span>
+                    <span class="detail-value" id="uv-index">--</span>
+                </div>
+            </section>
+
+            <!-- Hourly Forecast -->
+            <section class="forecast-section">
+                <h2 class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Hourly Forecast
+                </h2>
+                <div class="hourly-scroll" id="hourly-scroll"></div>
+            </section>
+
+            <!-- 7-Day Forecast -->
+            <section class="forecast-section">
+                <h2 class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    7-Day Forecast
+                </h2>
+                <div class="daily-forecast" id="daily-forecast"></div>
+            </section>
+
+            <!-- Sun & Moon -->
+            <section class="forecast-section sun-moon-section">
+                <h2 class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    Sunrise & Sunset
+                </h2>
+                <div class="sun-moon-grid">
+                    <div class="sun-card glass-card">
+                        <div class="sun-arc-container" id="sun-arc-container">
+                            <svg class="sun-arc-svg" viewBox="0 0 300 160">
+                                <defs>
+                                    <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stop-color="#FF8C00"/>
+                                        <stop offset="50%" stop-color="#FFD700"/>
+                                        <stop offset="100%" stop-color="#FF6347"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M 30 140 Q 150 -20 270 140" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-dasharray="6,4"/>
+                                <path id="sun-arc-progress" d="M 30 140 Q 150 -20 270 140" fill="none" stroke="url(#arcGrad)" stroke-width="3" stroke-linecap="round"/>
+                                <circle id="sun-position" cx="150" cy="60" r="8" fill="#FFD700" filter="url(#glow)">
+                                </circle>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                                <line x1="30" y1="140" x2="270" y2="140" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                            </svg>
+                        </div>
+                        <div class="sun-times">
+                            <div class="sun-time">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2"><path d="M17 18a5 5 0 00-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>
+                                <span class="sun-label">Sunrise</span>
+                                <span class="sun-value" id="sunrise-time">--:--</span>
+                            </div>
+                            <div class="sun-time">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#FF6347" stroke-width="2"><path d="M17 18a5 5 0 00-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="16 6 12 2 8 6" transform="rotate(180 12 4)"/></svg>
+                                <span class="sun-label">Sunset</span>
+                                <span class="sun-value" id="sunset-time">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Error State -->
+        <div class="error-screen hidden" id="error-screen">
+            <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <h2>Oops! Something went wrong</h2>
+            <p id="error-message">Unable to fetch weather data. Please try again.</p>
+            <button class="retry-btn" id="retry-btn">Try Again</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
